@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#1a1f2e">
+  <meta name="description" content="Préparation sportive PWA – checklist, calories, hydratation">
+  <title>SportPrep</title>
+  <!-- Manifest PWA -->
+  <link rel="manifest" href="/manifest.json">
+  <!-- Icône pour iOS -->
+  <link rel="apple-touch-icon" href="/static/icons/icon-192.png">
+  <!-- Feuille de style externe -->
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+
+<!-- Bandeau hors-ligne -->
+<div class="offline-banner" id="offlineBanner">Mode hors-ligne – données locales</div>
+
+<!-- En-tête -->
+<header>
+  <div>
+    <h1>⛰ SportPrep</h1>
+    <div class="tagline">Préparation sportive PWA</div>
+  </div>
+</header>
+
+<!-- Navigation -->
+<nav class="tabs">
+  <div class="tab active"  onclick="showTab('profil')">Profil</div>
+  <div class="tab"         onclick="showTab('activite')">Activité</div>
+  <div class="tab"         onclick="showTab('checklist')">Checklist</div>
+  <div class="tab"         onclick="showTab('nutrition')">Nutrition</div>
+</nav>
+
+<!-- PAGE PROFIL -->
+<div id="profil" class="page active">
+
+  <div class="card">
+    <div class="card-title">Données biométriques</div>
+    <div class="row2">
+      <div>
+        <label>Prénom</label>
+        <input type="text" id="prenom" placeholder="Votre prénom" oninput="saveProfile()">
+      </div>
+      <div>
+        <label>Sexe</label>
+        <select id="sexe" onchange="saveProfile()">
+          <option value="H">Homme</option>
+          <option value="F">Femme</option>
+        </select>
+      </div>
+    </div>
+    <div class="row3">
+      <div>
+        <label>Âge (ans)</label>
+        <input type="number" id="age" min="10" max="99" value="30" oninput="saveProfile()">
+      </div>
+      <div>
+        <label>Poids (kg)</label>
+        <input type="number" id="poids" min="30" max="200" value="70" oninput="saveProfile()">
+      </div>
+      <div>
+        <label>Taille (cm)</label>
+        <input type="number" id="taille" min="140" max="220" value="175" oninput="saveProfile()">
+      </div>
+    </div>
+    <div class="row2" style="margin-top:10px">
+      <div>
+        <label>Niveau</label>
+        <select id="niveau" onchange="saveProfile()">
+          <option value="debutant">Débutant</option>
+          <option value="intermediaire" selected>Intermédiaire</option>
+          <option value="avance">Avancé</option>
+        </select>
+      </div>
+      <div>
+        <label>IMC</label>
+        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-size:14px;color:var(--accent);font-weight:600;" id="imcDisplay">–</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Résumé</div>
+    <div class="stats-grid">
+      <div class="stat-box"><div class="stat-val"        id="imcVal">–</div><div class="stat-label">IMC</div></div>
+      <div class="stat-box"><div class="stat-val orange" id="bmrVal">–</div><div class="stat-label">kcal/j repos</div></div>
+      <div class="stat-box"><div class="stat-val blue"   id="ageVal">–</div><div class="stat-label">ans</div></div>
+    </div>
+    <div class="alert-info alert" id="imcCommentaire">Renseignez vos données ci-dessus.</div>
+  </div>
+
+</div><!-- /profil -->
+
+<!--PAGE ACTIVITÉ-->
+<div id="activite" class="page">
+
+  <div class="card">
+    <div class="card-title">Choisir l'activité</div>
+    <div class="sport-grid" id="sportGrid"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Paramètres de sortie</div>
+    <div class="row2">
+      <div>
+        <label>Durée (heures)</label>
+        <input type="number" id="duree" min="0.5" max="48" step="0.5" value="2" oninput="computeCalories()">
+      </div>
+      <div>
+        <label>Distance (km)</label>
+        <input type="number" id="distance" min="0" max="500" step="0.5" value="10" oninput="computeCalories()">
+      </div>
+    </div>
+    <div class="row2">
+      <div>
+        <label>Dénivelé+ (m)</label>
+        <input type="number" id="denivele" min="0" max="5000" step="50" value="0" oninput="computeCalories()">
+      </div>
+      <div>
+        <label>Charge sac (kg)</label>
+        <input type="number" id="chargeSac" min="0" max="30" step="0.5" value="0" oninput="computeCalories()">
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Météo estimée</div>
+    <label>Température</label>
+    <div class="meteo-row" id="tempRow">
+      <div class="meteo-chip selected" data-val="froid"       onclick="selectMeteo(this,'temp')">&lt; 10°</div>
+      <div class="meteo-chip"          data-val="frais"       onclick="selectMeteo(this,'temp')">10–18°</div>
+      <div class="meteo-chip"          data-val="chaud"       onclick="selectMeteo(this,'temp')">18–28°</div>
+      <div class="meteo-chip"          data-val="trescaliente"onclick="selectMeteo(this,'temp')">&gt; 28°</div>
+    </div>
+    <label style="margin-top:12px">Conditions</label>
+    <div class="meteo-row" id="condRow">
+      <div class="meteo-chip selected" data-val="beau"   onclick="selectMeteo(this,'cond')">Beau fixe</div>
+      <div class="meteo-chip"          data-val="nuageux"onclick="selectMeteo(this,'cond')">Nuageux</div>
+      <div class="meteo-chip"          data-val="pluie"  onclick="selectMeteo(this,'cond')">Pluie</div>
+      <div class="meteo-chip"          data-val="vent"   onclick="selectMeteo(this,'cond')">Vent fort</div>
+      <div class="meteo-chip"          data-val="neige"  onclick="selectMeteo(this,'cond')">Neige</div>
+    </div>
+  </div>
+
+  <div id="caloriesResult" style="display:none">
+    <div class="stats-grid">
+      <div class="stat-box"><div class="stat-val"        id="calVal">–</div><div class="stat-label">kcal effort</div></div>
+      <div class="stat-box"><div class="stat-val orange" id="hydVal">–</div><div class="stat-label">L eau min.</div></div>
+      <div class="stat-box"><div class="stat-val blue"   id="glucVal">–</div><div class="stat-label">g glucides</div></div>
+    </div>
+    <div class="alert-warn alert" id="caloriesDetail"></div>
+    <button class="btn btn-primary" onclick="showTab('checklist')">Voir la checklist →</button>
+  </div>
+
+</div><!-- /activite -->
+
+<!-- PAGE CHECKLIST -->
+<div id="checklist" class="page">
+
+  <div class="card">
+    <div class="card-title">
+      Équipement recommandé
+      <span id="checkProgress" style="color:var(--accent);margin-left:6px;font-size:12px;"></span>
+    </div>
+    <div id="alertChecklist" class="alert alert-info">Choisissez une activité dans l'onglet Activité.</div>
+    <ul class="checklist" id="checklistItems"></ul>
+    <div class="total-weight" id="totalWeightBox" style="display:none">
+      <span>Poids estimé du sac</span>
+      <span id="totalWeightVal">0 kg</span>
+    </div>
+  </div>
+
+  <div class="card" id="customItemCard">
+    <div class="card-title">Ajouter un élément</div>
+    <div class="row2">
+      <input type="text"   id="customItem"   placeholder="Nom de l'élément" onkeydown="if(event.key==='Enter')addCustomItem()">
+      <input type="number" id="customWeight" placeholder="Poids (g)" min="0" max="10000">
+    </div>
+    <button class="btn btn-primary" onclick="addCustomItem()" style="margin-top:8px">+ Ajouter</button>
+  </div>
+
+</div><!-- /checklist -->
+
+<!-- PAGE NUTRITION -->
+<div id="nutrition" class="page">
+
+  <div class="card">
+    <div class="card-title">Objectifs de la sortie</div>
+    <div class="stats-grid">
+      <div class="stat-box"><div class="stat-val"        id="nCalVal">–</div><div class="stat-label">kcal cible</div></div>
+      <div class="stat-box"><div class="stat-val orange" id="nHydVal">–</div><div class="stat-label">L eau cible</div></div>
+      <div class="stat-box"><div class="stat-val blue"   id="nGlucVal">–</div><div class="stat-label">g glucides</div></div>
+    </div>
+    <div class="alert-ok alert" id="nutritionPlan"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Journal de sortie</div>
+    <div class="log-input">
+      <select id="logType">
+        <option value="eau">Eau</option>
+        <option value="energie">Énergie</option>
+        <option value="repas">Repas/collation</option>
+      </select>
+      <input type="number" id="logQty"  placeholder="Qté" min="0" step="1">
+      <input type="text"   id="logUnit" placeholder="ml / kcal" style="max-width:70px">
+      <button onclick="addLog()">+</button>
+    </div>
+
+    <div style="margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px">
+        <span>Hydratation</span><span id="hydProgress" style="color:var(--info)">0 / – L</span>
+      </div>
+      <div class="progress-bar"><div class="progress-fill blue"   id="hydBar" style="width:0%"></div></div>
+      <div style="display:flex;justify-content:space-between;font-size:13px;margin:8px 0 4px">
+        <span>Calories ingérées</span><span id="calProgress" style="color:var(--accent2)">0 / – kcal</span>
+      </div>
+      <div class="progress-bar"><div class="progress-fill orange" id="calBar" style="width:0%"></div></div>
+    </div>
+
+    <ul class="timeline" id="nutritionLog"></ul>
+    <button class="btn btn-danger" onclick="clearLog()" style="margin-top:8px">Effacer le journal</button>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Plan alimentation simplifié</div>
+    <div id="mealPlan"></div>
+  </div>
+
+</div><!-- /nutrition -->
+
+<!-- Script principal (après le DOM) -->
+<script src="/static/js/app.js"></script>
+</body>
+</html>
